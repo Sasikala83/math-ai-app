@@ -9,8 +9,8 @@ import sympy as sp
 
 # ---------------- LOAD ENV ----------------
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # ---------------- APP ----------------
 app = FastAPI(
     title="Math AI App",

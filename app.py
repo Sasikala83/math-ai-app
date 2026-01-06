@@ -9,6 +9,17 @@ from openai import OpenAI
 import sympy as sp
 
 # ---------------- LOAD ENV ----------------
+from datetime import date
+
+# FREE LIMIT
+FREE_DAILY_LIMIT = 5
+
+# In-memory usage store
+# Structure: { ip: { "date": yyyy-mm-dd, "count": int } }
+usage_tracker = {}
+
+
+
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -31,6 +42,23 @@ def clean_and_parse_json(text: str):
     """
     text = re.sub(r"```json|```", "", text).strip()
     return json.loads(text)
+
+def check_usage_limit(ip: str):
+    today = date.today().isoformat()
+
+    if ip not in usage_tracker:
+        usage_tracker[ip] = {"date": today, "count": 0}
+
+    # Reset count if new day
+    if usage_tracker[ip]["date"] != today:
+        usage_tracker[ip] = {"date": today, "count": 0}
+
+    if usage_tracker[ip]["count"] >= FREE_DAILY_LIMIT:
+        return False
+
+    usage_tracker[ip]["count"] += 1
+    return True
+
 
 # ---------------- AGENTS ----------------
 def agent_classifier(problem: str):
@@ -127,6 +155,17 @@ class MathRequest(BaseModel):
     problem: str
 
 # ---------------- API ENDPOINT ----------------
+from fastapi import Request, HTTPException
+
 @app.post("/solve")
-def solve(request: MathRequest):
+def solve(request: MathRequest, req: Request):
+    client_ip = req.client.host
+
+    allowed = check_usage_limit(client_ip)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Free limit reached (5 problems/day). Please upgrade to continue."
+        )
+
     return solve_math_problem(request.problem)

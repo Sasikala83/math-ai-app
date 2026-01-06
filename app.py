@@ -157,6 +157,59 @@ class MathRequest(BaseModel):
 # ---------------- API ENDPOINT ----------------
 from fastapi import Request, HTTPException
 
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>EduMentor</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f5f7fa;
+                text-align: center;
+                padding-top: 80px;
+            }
+            h1 {
+                color: #2c3e50;
+            }
+            p {
+                font-size: 18px;
+                color: #555;
+            }
+            a {
+                display: inline-block;
+                margin: 15px;
+                padding: 12px 20px;
+                text-decoration: none;
+                background-color: #007bff;
+                color: white;
+                border-radius: 6px;
+                font-size: 16px;
+            }
+            a:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🎓 EduMentor</h1>
+        <p>Your AI-powered personal tutor for step-by-step learning.</p>
+
+        <a href="/docs">🚀 Try EduMentor</a>
+        <a href="https://openai.com">🤖 Powered by AI</a>
+
+        <p style="margin-top:40px;color:#888;">
+            Mathematics • Physics • Chemistry • Computer Science (Coming Soon)
+        </p>
+    </body>
+    </html>
+    """
+
+
 @app.post("/solve")
 def solve(request: MathRequest, req: Request):
     client_ip = req.client.host

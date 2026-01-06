@@ -1,4 +1,5 @@
 import os
+import os
 import json
 import re
 from fastapi import FastAPI
@@ -11,12 +12,17 @@ import sympy as sp
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=OPENAI_API_KEY)   # ✅ THIS WAS MISSING
+
 # ---------------- APP ----------------
 app = FastAPI(
     title="Math AI App",
     description="Agentic Math AI with verified solutions",
     version="1.0"
 )
+
+
 
 # ---------------- HELPERS ----------------
 def clean_and_parse_json(text: str):

@@ -176,8 +176,12 @@ def solve_math_problem(problem: str):
     classification_raw = agent_classifier(problem)
     classification = clean_and_parse_json(classification_raw)
 
-    solution = agent_solver(problem)
-    explanation = agent_teacher(solution)
+    raw_solution = agent_solver(problem)
+    solution = clean_text(raw_solution)
+
+    raw_explanation = agent_teacher(solution)
+    explanation = clean_text(raw_explanation)
+
     verification = sympy_verify(problem, solution)
 
     return {
@@ -186,6 +190,7 @@ def solve_math_problem(problem: str):
         "explanation": explanation,
         "verification": verification
     }
+
 
 # ---------------- API SCHEMA ----------------
 class MathRequest(BaseModel):
@@ -274,6 +279,5 @@ def clean_text(text: str):
     for k, v in replacements.items():
         text = text.replace(k, v)
     return text.strip()
-solution = clean_text(agent_solver(problem))
-explanation = clean_text(agent_teacher(solution))
+
 

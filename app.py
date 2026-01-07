@@ -116,12 +116,18 @@ Problem:
 def agent_solver(problem: str):
     prompt = f"""
 Solve the following math problem step by step.
-Show clear derivations.
-Ensure mathematical correctness.
+
+IMPORTANT FORMAT RULES:
+- Use ONLY plain English text
+- Do NOT use LaTeX
+- Do NOT use symbols like \\ , {{ }}, **, $, or math blocks
+- Write like a teacher explaining on a blackboard
+- Use words instead of formulas where possible
 
 Problem:
 {problem}
 """
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -132,16 +138,19 @@ Problem:
 
 def agent_teacher(solution: str):
     prompt = f"""
-You are an experienced Class 12 & IIT-JEE Mathematics teacher.
+Explain the solution in simple student-friendly language.
 
-Explain the solution step by step.
-Explain WHY each step is done.
-Mention common student mistakes.
-Give exam-oriented tips.
+FORMAT RULES:
+- Plain text only
+- No LaTeX
+- No backslashes, curly braces, or symbols
+- Use numbered steps
+- Write as if explaining orally in class
 
 Solution:
 {solution}
 """
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -250,3 +259,21 @@ def solve(request: MathRequest, req: Request):
         )
 
     return solve_math_problem(request.problem)
+
+def clean_text(text: str):
+    replacements = {
+        "\\(": "",
+        "\\)": "",
+        "\\[": "",
+        "\\]": "",
+        "**": "",
+        "{": "",
+        "}": "",
+        "$": ""
+    }
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    return text.strip()
+solution = clean_text(agent_solver(problem))
+explanation = clean_text(agent_teacher(solution))
+

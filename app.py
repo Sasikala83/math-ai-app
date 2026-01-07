@@ -271,7 +271,7 @@ def home():
         <a href="https://openai.com">🤖 Powered by AI</a>
 
         <p style="margin-top:40px;color:#888;">
-            Mathematics • Physics • Chemistry • Computer Science (Coming Soon)
+            
         </p>
     </body>
     </html>

@@ -3,3 +3,4 @@ uvicorn
 openai
 sympy
 python-dotenv
+jinja2

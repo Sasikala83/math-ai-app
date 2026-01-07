@@ -1,3 +1,8 @@
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+templates = Jinja2Templates(directory="templates")
+
 import os
 import os
 import json
@@ -38,68 +43,23 @@ app = FastAPI(
 
 from fastapi.responses import HTMLResponse
 
-@app.get("/", response_class=HTMLResponse)
+@@app.get("/", response_class=HTMLResponse)
 def home():
     return """
-    <!DOCTYPE html>
     <html>
-    <head>
-        <title>EduMentor</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: #f5f7fb;
-                text-align: center;
-                padding: 50px;
-            }
-            h1 {
-                color: #2c3e50;
-            }
-            p {
-                font-size: 18px;
-                color: #555;
-            }
-            .box {
-                background: white;
-                padding: 30px;
-                border-radius: 10px;
-                width: 60%;
-                margin: auto;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            }
-            button {
-                padding: 12px 25px;
-                font-size: 16px;
-                border: none;
-                border-radius: 5px;
-                background: #4CAF50;
-                color: white;
-                cursor: pointer;
-            }
-            button:hover {
-                background: #43a047;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="box">
-            <h1>Welcome to EduMentor 📘</h1>
-            <p>
-                AI-powered step-by-step learning for Mathematics.<br>
-                Designed for CBSE, ICSE, State Boards & Competitive Exams.
-            </p>
-            <p>
-                🚀 Learn concepts<br>
-                ✍️ Solve problems step-by-step<br>
-                🎯 Exam-focused explanations
-            </p>
-            <button onclick="alert('Student interface coming soon!')">
-                Start Learning
-            </button>
-        </div>
+    <head><title>EduMentor</title></head>
+    <body style="font-family:Arial;text-align:center;padding-top:80px;">
+        <h1>Welcome to EduMentor 📘</h1>
+        <p>AI-powered step-by-step learning</p>
+        <a href="/student">
+            <button style="padding:12px 20px;font-size:16px;">Start Learning</button>
+        </a>
     </body>
     </html>
     """
+@app.get("/student", response_class=HTMLResponse)
+def student_page(request: Request):
+    return templates.TemplateResponse("student.html", {"request": request})
 
 
 

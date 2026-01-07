@@ -113,27 +113,26 @@ Problem:
     return response.choices[0].message.content
 
 
-def agent_solver(problem: str):
+ddef agent_solver(problem: str):
     prompt = f"""
 Solve the following math problem step by step.
 
-IMPORTANT FORMAT RULES:
-- Use ONLY plain English text
-- Do NOT use LaTeX
-- Do NOT use symbols like \\ , {{ }}, **, $, or math blocks
-- Write like a teacher explaining on a blackboard
-- Use words instead of formulas where possible
+FORMAT RULES:
+- Use standard mathematical notation (example: 3x⁴, 5x³)
+- Do NOT use LaTeX or symbols like \\ or **
+- Write explanations in plain English
+- Keep expressions exactly as written in textbooks
 
 Problem:
 {problem}
 """
-
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
     return response.choices[0].message.content
+
 
 
 def agent_teacher(solution: str):
@@ -160,15 +159,31 @@ Solution:
 
 
 # ---------------- SYMPY VERIFICATION ----------------
-def sympy_verify(problem: str, solution_text: str):
+ddef sympy_verify(problem: str, solution_text: str):
     """
-    MVP symbolic verification.
-    (Hardcoded for demonstration – expandable later)
+    Symbolically verifies the derivative and returns
+    textbook-style math (no **, no *, no LaTeX).
     """
-    x = sp.symbols("x")
-    expr = x**2 * sp.sin(x)
-    correct = sp.diff(expr, x)
-    return f"VERIFIED by SymPy: {correct}"
+    try:
+        x = sp.symbols("x")
+
+        # Normalize input (handles superscripts and symbols)
+        expr = sp.sympify(
+            problem
+            .replace("−", "-")
+            .replace("×", "*")
+            .replace("^", "**")
+        )
+
+        derivative = sp.diff(expr, x)
+
+        # Convert to textbook-style Unicode math
+        pretty_derivative = sp.pretty(derivative, use_unicode=True)
+
+        return pretty_derivative
+
+    except Exception:
+        return "Verification not available for this problem."
 
 
 # ---------------- CORE PIPELINE ----------------

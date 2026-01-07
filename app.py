@@ -43,7 +43,7 @@ app = FastAPI(
 
 from fastapi.responses import HTMLResponse
 
-@@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def home():
     return """
     <html>

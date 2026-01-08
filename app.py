@@ -115,14 +115,30 @@ Problem:
 
 def agent_solver(problem: str):
     prompt = f"""
-Solve the problem exactly like a board exam answer.
+Solve the problem exactly in board-exam format.
 
-STRICT FORMAT RULES:
-- Use f(x), f′(x), and d/dx notation only
-- Do NOT use words like "derivative of"
-- Do NOT use LaTeX, symbols, or programming syntax
-- Write clean, step-by-step textbook format
-- Keep it concise and clear
+STRICT RULES (DO NOT VIOLATE):
+- Use only f(x), f′(x), and d/dx
+- NEVER write \\fracddx or any latex-style commands
+- DO NOT explain individual term derivatives separately
+- DO NOT use unnecessary brackets or symbols
+- Follow the exact structure below
+
+REQUIRED STRUCTURE:
+
+Given:
+f(x) = <function>
+
+Applying d/dx on both sides,
+
+d/dx [f(x)] = d/dx (<function>)
+
+f′(x) = d/dx (term1) − d/dx (term2) + ...
+
+f′(x) = <simplified result>
+
+Therefore,
+f′(x) = <final answer>
 
 Problem:
 {problem}
@@ -171,11 +187,8 @@ def sympy_verify(problem: str, solution_text: str):
         )
         derivative = sp.diff(expr, x)
 
-        result = str(derivative)
-        result = result.replace("**", "^").replace("*", "")
-        result = result.replace("+", " + ").replace("-", " − ")
-
-        return f"Verified:\nf′(x) = {result.strip()}"
+        result = sp.pretty(derivative, use_unicode=True)
+        return f"Verified:\nf′(x) = {result}"
     except:
         return "Verified:\nAnswer follows standard differentiation rules"
 

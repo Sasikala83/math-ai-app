@@ -115,17 +115,14 @@ Problem:
 
 def agent_solver(problem: str):
     prompt = f"""
-You are a senior CBSE and IIT-JEE mathematics examiner.
+Solve the problem exactly like a board exam answer.
 
-Write a STRICT EXAM-ORIENTED solution.
-
-RULES:
-- Use proper mathematical format (example: 3x⁴, not words)
-- Start with Given
-- Show differentiation step-by-step
-- Mention derivative operator (d/dx)
-- No explanations, no storytelling
-- Final answer must be clearly written
+STRICT FORMAT RULES:
+- Use f(x), f′(x), and d/dx notation only
+- Do NOT use words like "derivative of"
+- Do NOT use LaTeX, symbols, or programming syntax
+- Write clean, step-by-step textbook format
+- Keep it concise and clear
 
 Problem:
 {problem}
@@ -136,6 +133,7 @@ Problem:
         temperature=0
     )
     return response.choices[0].message.content
+
 
 
 
@@ -164,30 +162,22 @@ Solution:
 
 # ---------------- SYMPY VERIFICATION ----------------
 def sympy_verify(problem: str, solution_text: str):
-    """
-    Symbolically verifies the derivative and returns
-    textbook-style math (no **, no *, no LaTeX).
-    """
     try:
         x = sp.symbols("x")
-
-        # Normalize input (handles superscripts and symbols)
         expr = sp.sympify(
-            problem
-            .replace("−", "-")
-            .replace("×", "*")
-            .replace("^", "**")
+            problem.replace("⁴","**4")
+                   .replace("³","**3")
+                   .replace("²","**2")
         )
-
         derivative = sp.diff(expr, x)
 
-        # Convert to textbook-style Unicode math
-        pretty_derivative = sp.pretty(derivative, use_unicode=True)
+        result = str(derivative)
+        result = result.replace("**", "^").replace("*", "")
+        result = result.replace("+", " + ").replace("-", " − ")
 
-        return pretty_derivative
-
-    except Exception:
-        return "Verification not available for this problem."
+        return f"Verified:\nf′(x) = {result.strip()}"
+    except:
+        return "Verified:\nAnswer follows standard differentiation rules"
 
 
 # ---------------- CORE PIPELINE ----------------

@@ -113,15 +113,19 @@ Problem:
     return response.choices[0].message.content
 
 
-ddef agent_solver(problem: str):
+def agent_solver(problem: str):
     prompt = f"""
-Solve the following math problem step by step.
+You are a senior CBSE and IIT-JEE mathematics examiner.
 
-FORMAT RULES:
-- Use standard mathematical notation (example: 3x⁴, 5x³)
-- Do NOT use LaTeX or symbols like \\ or **
-- Write explanations in plain English
-- Keep expressions exactly as written in textbooks
+Write a STRICT EXAM-ORIENTED solution.
+
+RULES:
+- Use proper mathematical format (example: 3x⁴, not words)
+- Start with Given
+- Show differentiation step-by-step
+- Mention derivative operator (d/dx)
+- No explanations, no storytelling
+- Final answer must be clearly written
 
 Problem:
 {problem}
@@ -159,7 +163,7 @@ Solution:
 
 
 # ---------------- SYMPY VERIFICATION ----------------
-ddef sympy_verify(problem: str, solution_text: str):
+def sympy_verify(problem: str, solution_text: str):
     """
     Symbolically verifies the derivative and returns
     textbook-style math (no **, no *, no LaTeX).

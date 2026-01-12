@@ -113,32 +113,33 @@ Problem:
     return response.choices[0].message.content
 
 
-def agent_solver(problem: str):
+ddef agent_solver(problem: str):
     prompt = f"""
-Solve the problem exactly in board-exam format.
+Write the solution exactly in school exam format.
 
-STRICT RULES (DO NOT VIOLATE):
-- Use only f(x), f′(x), and d/dx
-- NEVER write \\fracddx or any latex-style commands
-- DO NOT explain individual term derivatives separately
-- DO NOT use unnecessary brackets or symbols
-- Follow the exact structure below
+Rules:
+- use only f(x), f′(x), d/dx
+- no latex
+- no symbols like **, {{ }}, $
+- no words like "derivative of"
+- no capital letters
+- no brackets except for f(x)
 
-REQUIRED STRUCTURE:
+Format exactly like this:
 
-Given:
-f(x) = <function>
+given:
+f(x) = <expression>
 
-Applying d/dx on both sides,
+applying d/dx on both sides,
 
-d/dx [f(x)] = d/dx (<function>)
+d/dx [f(x)] = d/dx (<expression>)
 
 f′(x) = d/dx (term1) − d/dx (term2) + ...
 
-f′(x) = <simplified result>
+f′(x) = <simplified>
 
-Therefore,
-f′(x) = <final answer>
+therefore,
+f′(x) = <final>
 
 Problem:
 {problem}
@@ -149,6 +150,7 @@ Problem:
         temperature=0
     )
     return response.choices[0].message.content
+
 
 
 
@@ -177,20 +179,25 @@ Solution:
 
 
 # ---------------- SYMPY VERIFICATION ----------------
-def sympy_verify(problem: str, solution_text: str):
-    try:
-        x = sp.symbols("x")
-        expr = sp.sympify(
-            problem.replace("⁴","**4")
-                   .replace("³","**3")
-                   .replace("²","**2")
-        )
-        derivative = sp.diff(expr, x)
+ddef sympy_verify(problem: str, solution_text: str):
+    x = sp.symbols("x")
 
-        result = sp.pretty(derivative, use_unicode=True)
-        return f"Verified:\nf′(x) = {result}"
-    except:
-        return "Verified:\nAnswer follows standard differentiation rules"
+    expr = sp.sympify(
+        problem.replace("⁴","**4")
+               .replace("³","**3")
+               .replace("²","**2")
+    )
+
+    result = sp.diff(expr, x)
+
+    pretty = str(result)
+    pretty = pretty.replace("**4","⁴").replace("**3","³").replace("**2","²")
+
+    return f"""verified:
+
+f′(x) = {pretty}
+"""
+
 
 
 # ---------------- CORE PIPELINE ----------------

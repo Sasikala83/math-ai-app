@@ -33,10 +33,10 @@ templates = Jinja2Templates(directory="templates")
 def student_home(request: Request):
     return templates.TemplateResponse("student.html", {"request": request})
 
-# Optional: keep this also
 @app.get("/student", response_class=HTMLResponse)
 def student_page(request: Request):
     return templates.TemplateResponse("student.html", {"request": request})
+
 
 
 

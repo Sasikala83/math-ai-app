@@ -23,20 +23,21 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)   # ✅ THIS WAS MISSING
 
 # ---------------- APP ----------------
-app = FastAPI(
-    title="EduMentor",
-    description="AI-powered learning engine",
-    version="1.0",
-    docs_url=None,          # ❌ disables /docs
-    redoc_url=None,         # ❌ disables /redoc
-    openapi_url=None        # ❌ disables /openapi.json
-)
-
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+def student_home(request: Request):
+    return templates.TemplateResponse("student.html", {"request": request})
+
+# Optional: keep this also
 @app.get("/student", response_class=HTMLResponse)
 def student_page(request: Request):
     return templates.TemplateResponse("student.html", {"request": request})
+
 
 
 

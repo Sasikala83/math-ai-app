@@ -16,15 +16,6 @@ import sympy as sp
 # ---------------- LOAD ENV ----------------
 from datetime import date
 
-# FREE LIMIT
-FREE_DAILY_LIMIT = 5
-
-# In-memory usage store
-# Structure: { ip: { "date": yyyy-mm-dd, "count": int } }
-usage_tracker = {}
-
-
-
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -43,20 +34,6 @@ app = FastAPI(
 
 from fastapi.responses import HTMLResponse
 
-@app.get("/", response_class=HTMLResponse)
-def home():
-    return """
-    <html>
-    <head><title>EduMentor</title></head>
-    <body style="font-family:Arial;text-align:center;padding-top:80px;">
-        <h1>Welcome to EduMentor 📘</h1>
-        <p>AI-powered step-by-step learning</p>
-        <a href="/student">
-            <button style="padding:12px 20px;font-size:16px;">Start Learning</button>
-        </a>
-    </body>
-    </html>
-    """
 @app.get("/student", response_class=HTMLResponse)
 def student_page(request: Request):
     return templates.TemplateResponse("student.html", {"request": request})
@@ -71,29 +48,13 @@ def clean_and_parse_json(text: str):
     text = re.sub(r"```json|```", "", text).strip()
     return json.loads(text)
 
-def check_usage_limit(ip: str):
-    today = date.today().isoformat()
-
-    if ip not in usage_tracker:
-        usage_tracker[ip] = {"date": today, "count": 0}
-
-    # Reset count if new day
-    if usage_tracker[ip]["date"] != today:
-        usage_tracker[ip] = {"date": today, "count": 0}
-
-    if usage_tracker[ip]["count"] >= FREE_DAILY_LIMIT:
-        return False
-
-    usage_tracker[ip]["count"] += 1
-    return True
-
-
 # ---------------- AGENTS ----------------
 def agent_classifier(problem: str):
     prompt = f"""
-You are an IIT-JEE Mathematics expert.
+You are an expert Mathematics teacher for Classes 9 to 12 and IIT-JEE.
 
 Classify the following problem into:
+- Class (9 / 10 / 11 / 12 / JEE)
 - Topic
 - Sub-topic
 - Difficulty (Easy / Medium / Hard)
@@ -113,33 +74,34 @@ Problem:
     return response.choices[0].message.content
 
 
-ddef agent_solver(problem: str):
+
+def agent_solver(problem: str, class_level: str, chapter: str):
+    exam_style = get_exam_style(class_level)
+
     prompt = f"""
-Write the solution exactly in school exam format.
+You are an experienced Mathematics teacher.
+
+Exam Type: {class_level}
+Chapter: {chapter}
+Teaching Style: {exam_style}
+
+Solve the following problem.
+
+FORMAT:
+given:
+to find:
+formula used:
+solution:
+step 1:
+step 2:
+...
+therefore,
+final answer:
 
 Rules:
-- use only f(x), f′(x), d/dx
-- no latex
-- no symbols like **, {{ }}, $
-- no words like "derivative of"
-- no capital letters
-- no brackets except for f(x)
-
-Format exactly like this:
-
-given:
-f(x) = <expression>
-
-applying d/dx on both sides,
-
-d/dx [f(x)] = d/dx (<expression>)
-
-f′(x) = d/dx (term1) − d/dx (term2) + ...
-
-f′(x) = <simplified>
-
-therefore,
-f′(x) = <final>
+- Step-by-step
+- Suitable for {class_level} level
+- Follow the teaching style strictly
 
 Problem:
 {problem}
@@ -152,24 +114,27 @@ Problem:
     return response.choices[0].message.content
 
 
+def agent_teacher(solution: str, class_level: str, chapter: str):
+    exam_style = get_exam_style(class_level)
 
-
-
-def agent_teacher(solution: str):
     prompt = f"""
-Explain the solution in simple student-friendly language.
+You are teaching in a classroom.
 
-FORMAT RULES:
-- Plain text only
-- No LaTeX
-- No backslashes, curly braces, or symbols
-- Use numbered steps
-- Write as if explaining orally in class
+Exam Type: {class_level}
+Chapter: {chapter}
+Teaching Style: {exam_style}
+
+Explain the solution orally.
+
+Rules:
+- Very clear
+- Stepwise
+- According to {class_level} exam pattern
+- Focus on understanding
 
 Solution:
 {solution}
 """
-
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -178,8 +143,43 @@ Solution:
     return response.choices[0].message.content
 
 
+def agent_logical_verifier(problem: str, solution: str, class_level: str, chapter: str):
+    prompt = f"""
+You are an examiner checking a student's answer.
+
+Class: {class_level}
+Chapter: {chapter}
+
+Problem:
+{problem}
+
+Student Solution:
+{solution}
+
+Task:
+1. Re-solve the problem independently.
+2. Compare your final answer with the student's final answer.
+3. State clearly whether the answer is correct.
+4. Give a short verification statement.
+
+Format:
+
+verification:
+status: correct / incorrect
+reason:
+(short logical justification)
+"""
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+    return response.choices[0].message.content
+
+
+
 # ---------------- SYMPY VERIFICATION ----------------
-ddef sympy_verify(problem: str, solution_text: str):
+def sympy_verify(problem: str, solution_text: str):
     x = sp.symbols("x")
 
     expr = sp.sympify(
@@ -201,20 +201,28 @@ f′(x) = {pretty}
 
 
 # ---------------- CORE PIPELINE ----------------
-def solve_math_problem(problem: str):
+def solve_math_problem(problem: str, class_level: str = None, chapter: str = None):
     classification_raw = agent_classifier(problem)
     classification = clean_and_parse_json(classification_raw)
 
-    raw_solution = agent_solver(problem)
+    raw_solution = agent_solver(problem, class_level, chapter)
     solution = clean_text(raw_solution)
 
-    raw_explanation = agent_teacher(solution)
+    raw_explanation = agent_teacher(solution, class_level, chapter)
     explanation = clean_text(raw_explanation)
 
-    verification = sympy_verify(problem, solution)
+    try:
+        if any(word in problem.lower() for word in ["differentiate", "derivative", "integrate", "integration"]):
+            verification = sympy_verify(problem, solution)
+        else:
+            verification = agent_logical_verifier(problem, solution, class_level, chapter)
+    except:
+        verification = "verification could not be completed"
 
     return {
         "classification": classification,
+        "class": class_level,
+        "chapter": chapter,
         "solution": solution,
         "explanation": explanation,
         "verification": verification
@@ -224,75 +232,25 @@ def solve_math_problem(problem: str):
 # ---------------- API SCHEMA ----------------
 class MathRequest(BaseModel):
     problem: str
+    class_level: str | None = None
+    chapter: str | None = None
 
-# ---------------- API ENDPOINT ----------------
-from fastapi import Request, HTTPException
+from fastapi.responses import RedirectResponse
 
-from fastapi.responses import HTMLResponse
-
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>EduMentor</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f5f7fa;
-                text-align: center;
-                padding-top: 80px;
-            }
-            h1 {
-                color: #2c3e50;
-            }
-            p {
-                font-size: 18px;
-                color: #555;
-            }
-            a {
-                display: inline-block;
-                margin: 15px;
-                padding: 12px 20px;
-                text-decoration: none;
-                background-color: #007bff;
-                color: white;
-                border-radius: 6px;
-                font-size: 16px;
-            }
-            a:hover {
-                background-color: #0056b3;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>🎓 EduMentor</h1>
-        <p>Your AI-powered personal tutor for step-by-step learning.</p>
+    return RedirectResponse(url="/student")
 
-        <a href="/docs">🚀 Try EduMentor</a>
-        <a href="https://openai.com">🤖 Powered by AI</a>
 
-        <p style="margin-top:40px;color:#888;">
-            
-        </p>
-    </body>
-    </html>
-    """
+@app.get("/student", response_class=HTMLResponse)
+def student_page(request: Request):
+    return templates.TemplateResponse("student.html", {"request": request})
 
 
 @app.post("/solve")
-def solve(request: MathRequest, req: Request):
-    client_ip = req.client.host
+def solve(request: MathRequest):
+    return solve_math_problem(request.problem, request.class_level, request.chapter)
 
-    allowed = check_usage_limit(client_ip)
-    if not allowed:
-        raise HTTPException(
-            status_code=429,
-            detail="Free limit reached (5 problems/day). Please upgrade to continue."
-        )
-
-    return solve_math_problem(request.problem)
 
 def clean_text(text: str):
     replacements = {
@@ -309,4 +267,17 @@ def clean_text(text: str):
         text = text.replace(k, v)
     return text.strip()
 
+def get_exam_style(class_level: str):
+    if class_level == "GATE":
+        return "Use university level theory, rigorous derivations, and competitive exam depth."
+    elif class_level == "CAT":
+        return "Use fast methods, mental math shortcuts, and time-saving tricks."
+    elif class_level == "UPSC CSAT":
+        return "Use conceptual explanation, logical reasoning, and real-life interpretation."
+    elif class_level == "JEE":
+        return "Use high-level problem solving with concept linking and formula derivations."
+    elif class_level == "Engineering":
+        return "Use professor-style explanation with proofs and applications."
+    else:
+        return "Use simple school-level board exam explanation."
 

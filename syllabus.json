@@ -1,0 +1,100 @@
+{
+    "Class 9": [
+      "Number Systems",
+      "Polynomials",
+      "Linear Equations in Two Variables",
+      "Quadrilaterals",
+      "Areas of Parallelograms and Triangles",
+      "Circles",
+      "Constructions",
+      "Heron’s Formula",
+      "Surface Areas and Volumes",
+      "Statistics",
+      "Probability"
+    ],
+    "Class 10": [
+      "Real Numbers",
+      "Polynomials",
+      "Pair of Linear Equations in Two Variables",
+      "Quadratic Equations",
+      "Arithmetic Progressions",
+      "Triangles",
+      "Coordinate Geometry",
+      "Trigonometry",
+      "Circles",
+      "Constructions",
+      "Areas Related to Circles",
+      "Surface Areas and Volumes",
+      "Statistics",
+      "Probability"
+    ],
+    "Class 11": [
+      "Sets",
+      "Relations and Functions",
+      "Trigonometric Functions",
+      "Complex Numbers and Quadratic Equations",
+      "Linear Inequalities",
+      "Permutations and Combinations",
+      "Binomial Theorem",
+      "Sequences and Series",
+      "Straight Lines",
+      "Conic Sections",
+      "Limits and Derivatives",
+      "Statistics",
+      "Probability"
+    ],
+    "Class 12": [
+      "Relations and Functions",
+      "Inverse Trigonometric Functions",
+      "Matrices",
+      "Determinants",
+      "Continuity and Differentiability",
+      "Applications of Derivatives",
+      "Integrals",
+      "Applications of Integrals",
+      "Differential Equations",
+      "Vector Algebra",
+      "Three Dimensional Geometry",
+      "Linear Programming",
+      "Probability"
+    ],
+    "JEE": [
+      "Algebra",
+      "Trigonometry",
+      "Coordinate Geometry",
+      "Differential Calculus",
+      "Integral Calculus",
+      "Differential Equations",
+      "Vectors",
+      "3D Geometry",
+      "Probability",
+      "Complex Numbers",
+      "Matrices and Determinants",
+      "Mathematical Reasoning"
+    ]
+  }
+  "GATE": [
+    "Engineering Mathematics",
+    "Linear Algebra",
+    "Calculus",
+    "Differential Equations",
+    "Complex Analysis",
+    "Probability and Statistics",
+    "Numerical Methods"
+],
+"CAT": [
+    "Arithmetic",
+    "Algebra",
+    "Geometry",
+    "Number System",
+    "Permutation and Combination",
+    "Probability"
+],
+"UPSC CSAT": [
+    "Quantitative Aptitude",
+    "Logical Reasoning",
+    "Data Interpretation",
+    "Basic Algebra",
+    "Geometry",
+    "Probability"
+]

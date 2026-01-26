@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "templates"
+		},
+		{
+			"path": "__pycache__"
+		},
+		{
+			"path": "venv"
+		}
+	]
+}

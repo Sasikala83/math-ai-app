@@ -21,6 +21,7 @@
             height: 100px;
             font-size: 16px;
             padding: 10px;
+            
         }
         button {
             background: #28a745;
@@ -44,7 +45,24 @@
 
 <div class="container">
     <h2>🎓 EduMentor – Student Problem Solver</h2>
-
+    <div style="margin-bottom:15px;">
+        <button onclick="setClass('Class 9')">Class 9</button>
+        <button onclick="setClass('Class 10')">Class 10</button>
+        <button onclick="setClass('Class 11')">Class 11</button>
+        <button onclick="setClass('Class 12')">Class 12</button>
+        <button onclick="setClass('JEE')">JEE</button>
+        <button onclick="setClass('Engineering')">Engineering</button>
+        <button onclick="setClass('GATE')">GATE</button>
+        <button onclick="setClass('CAT')">CAT</button>
+        <button onclick="setClass('UPSC CSAT')">UPSC CSAT</button>
+    </div>
+    
+    
+    <p id="selectedClass" style="font-weight:bold;">Selected Class: None</p>
+    <select id="chapterSelect" style="padding:8px; margin-bottom:10px; width:100%;">
+        <option value="">Select Chapter</option>
+    </select>
+    
     <textarea id="problem" placeholder="Enter your math problem here..."></textarea>
 
     <button onclick="solve()">Solve</button>
@@ -53,33 +71,64 @@
 </div>
 
 <script>
-async function solve() {
-    const problem = document.getElementById("problem").value;
-    document.getElementById("output").innerHTML = "⏳ Solving...";
-
-    const response = await fetch("/solve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problem })
-    });
-
-    const data = await response.json();
-
-    document.getElementById("output").innerHTML = `
-        <h3>📘 Classification</h3>
-        <pre>${JSON.stringify(data.classification, null, 2)}</pre>
-
-        <h3>✍️ Solution</h3>
-        <pre>${data.solution}</pre>
-
-        <h3>👩‍🏫 Explanation</h3>
-        <pre>${data.explanation}</pre>
-
-        <h3>✅ Verification</h3>
-        <pre>${data.verification}</pre>
-    `;
-}
-</script>
-
+    const syllabus = {
+        "Class 9": ["Number Systems","Polynomials","Linear Equations","Triangles","Circles","Statistics","Probability"],
+        "Class 10": ["Real Numbers","Quadratic Equations","Arithmetic Progression","Trigonometry","Circles","Coordinate Geometry","Statistics"],
+        "Class 11": ["Sets","Relations and Functions","Trigonometric Functions","Complex Numbers","Permutations and Combinations","Limits and Derivatives","Probability"],
+        "Class 12": ["Matrices","Determinants","Continuity and Differentiability","Applications of Derivatives","Integrals","Vectors","Probability"],
+        "JEE": ["Algebra","Trigonometry","Coordinate Geometry","Calculus","Vectors","3D Geometry","Probability"]
+    };
+    
+    let selectedClass = "";
+    
+    function setClass(cls) {
+        selectedClass = cls;
+        document.getElementById("selectedClass").innerText = "Selected Class: " + cls;
+    
+        const chapterSelect = document.getElementById("chapterSelect");
+        chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
+    
+        syllabus[cls].forEach(chapter => {
+            const opt = document.createElement("option");
+            opt.value = chapter;
+            opt.textContent = chapter;
+            chapterSelect.appendChild(opt);
+        });
+    }
+    
+    async function solve() {
+        const problem = document.getElementById("problem").value;
+        const chapter = document.getElementById("chapterSelect").value;
+        document.getElementById("output").innerHTML = "⏳ Solving...";
+    
+        const response = await fetch("/solve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                problem: problem,
+                class_level: selectedClass,
+                chapter: chapter
+            })
+        });
+    
+        const data = await response.json();
+    
+        document.getElementById("output").innerHTML = `
+            <h3>📘 Classification</h3>
+            <pre>${JSON.stringify(data.classification, null, 2)}</pre>
+    
+            <h3>✍️ Solution</h3>
+            <pre>${data.solution}</pre>
+    
+            <h3>👩‍🏫 Explanation</h3>
+            <pre>${data.explanation}</pre>
+    
+            <h3>✅ Verification</h3>
+            <pre>${data.verification}</pre>
+        `;
+    }
+    </script>
+    
+    
 </body>
 </html>
